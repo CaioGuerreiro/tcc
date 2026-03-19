@@ -1,0 +1,7 @@
+# Ignorar arquivos de ambiente (Senhas e Credenciais)
+.env/
+
+# Ignorar pastas de ambiente virtual Python (se você usar)
+venv/
+env/
+__pycache__/

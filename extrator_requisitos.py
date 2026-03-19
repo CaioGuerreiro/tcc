@@ -10,22 +10,40 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=API_KEY)
 
-def ler_codigo_fonte(caminho_arquivo):
-    """Lê o arquivo de código que queremos analisar."""
-    with open(caminho_arquivo, 'r', encoding='utf-8') as file:
-        return file.read()
+def ler_multiplos_arquivos(lista_caminhos):
+    """Lê uma lista de arquivos e os junta em uma única string estruturada."""
+    codigo_completo = ""
+    
+    for caminho in lista_caminhos:
+        try:
+            with open(caminho, 'r', encoding='utf-8') as file:
+                conteudo = file.read()
+                # Cria um cabeçalho claro para a IA saber qual arquivo está lendo
+                codigo_completo += f"\n\n{'='*50}\n"
+                codigo_completo += f"ARQUIVO: {caminho}\n"
+                codigo_completo += f"{'='*50}\n\n"
+                codigo_completo += conteudo
+                print(f"Lido com sucesso: {caminho}")
+        except FileNotFoundError:
+            print(f"Aviso: O arquivo '{caminho}' não foi encontrado e será ignorado.")
+        except Exception as e:
+            print(f"Erro ao ler o arquivo '{caminho}': {e}")
+            
+    return codigo_completo
 
-def extrair_requisitos(codigo_fonte):
+def extrair_requisitos(codigo_fonte_unificado):
     """Envia o código para a LLM e pede a extração dos requisitos."""
     
     # Engenharia de Prompt
     prompt_sistema = """
     Você atua como um Engenheiro de Requisitos Sênior e Analista de Sistemas Especialista.
     Sua missão é realizar a Engenharia Reversa de Requisitos com extremo rigor técnico a partir do código-fonte fornecido.
+    
 
     DIRETRIZES DE EXTRAÇÃO (CRÍTICO):
     1. Baseie-se ESTRITAMENTE no código fornecido. Não faça suposições, não deduza funcionalidades futuras e não invente regras que não estejam explicitamente programadas.
     2. Rastreabilidade: Para cada requisito ou regra, você DEVE indicar o nome do método, função ou classe de onde a informação foi extraída.
+    3. Faça análise SOMENTE de requisitos baseados no LOGIN
 
     Apresente sua análise OBRIGATORIAMENTE no seguinte formato estruturado em Markdown:
 
@@ -46,7 +64,7 @@ def extrair_requisitos(codigo_fonte):
     * **Saídas/Efeitos Colaterais:** (O que o código retorna ou onde ele salva os dados - ex: Banco de Dados, Arquivo, Retorno de API).
     """
 
-    prompt_usuario = f"Aqui está o código-fonte para análise:\n\n{codigo_fonte}"
+    prompt_usuario = f"Aqui está os código-fontes para análise:\n\n{codigo_fonte_unificado}"
 
     print("Enviando código para a LLM. Aguarde...")
     
@@ -65,23 +83,32 @@ def extrair_requisitos(codigo_fonte):
 
 
 if __name__ == "__main__":
+
+    lista_de_arquivos = [
+        'C:/Users/caiog/Documents/Projetos/Mangoo-Front/src/app/(login)/login/page.tsx',
+        'C:/Users/caiog/Documents/Projetos/backend-api/mangoo/users/token.py',
+        'C:/Users/caiog/Documents/Projetos/backend-api/config/views.py'
+
+    ]
     
-    caminho_do_seu_codigo = 'C:/Users/caiog/Documents/Projetos/Mangoo-Front/src/app/(login)/login/page.tsx' 
     
-    try:
-        
-        codigo = ler_codigo_fonte(caminho_do_seu_codigo)
-        
-        
-        resultado = extrair_requisitos(codigo)
-        
-        #  Markdown 
-        with open('requisitos_extraidos.md', 'w', encoding='utf-8') as f:
-            f.write(resultado)
+    
+    
+    # 2. Lê todos os arquivos e junta tudo
+    codigo_unificado = ler_multiplos_arquivos(lista_de_arquivos)
+    
+    # 3. Só processa se conseguiu ler algum código
+    if codigo_unificado.strip():
+        try:
+            resultado = extrair_requisitos(codigo_unificado)
             
-        print("✅ Sucesso! Os requisitos foram extraídos e salvos em 'requisitos_extraidos.md'.")
-        
-    except FileNotFoundError:
-        print(f"Erro: O arquivo {caminho_do_seu_codigo} não foi encontrado.")
-    except Exception as e:
-        print(f"Ocorreu um erro ao processar: {e}")
+            # Salva o Markdown
+            with open('requisitos_extraidos.md', 'w', encoding='utf-8') as f:
+                f.write(resultado)
+                
+            print("\n✅ Sucesso! Os requisitos cruzados foram extraídos e salvos em 'requisitos_extraidos.md'.")
+            
+        except Exception as e:
+            print(f"\n❌ Ocorreu um erro ao processar com a IA: {e}")
+    else:
+        print("\n❌ Nenhum código válido foi lido. Verifique os caminhos dos arquivos.") 
