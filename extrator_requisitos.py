@@ -20,15 +20,30 @@ def extrair_requisitos(codigo_fonte):
     
     # Engenharia de Prompt
     prompt_sistema = """
-    Você é um Engenheiro de Requisitos Sênior e Analista de Sistemas. 
-    Sua tarefa é realizar a Engenharia Reversa de Requisitos a partir do código-fonte fornecido.
-    
-    Por favor, analise o código e identifique:
-    1. O Objetivo Principal deste módulo/classe.
-    2. Os Requisitos Funcionais (o que o sistema faz, regras de negócio implementadas). Escreva no formato "O sistema deve..." ou usando o formato de User Stories.
-    3. Exceções e Regras de Validação encontradas (ex: tratamento de erros, limites de variáveis).
-    
-    Seja claro, objetivo e não invente funcionalidades que não estão explicitamente codificadas.
+    Você atua como um Engenheiro de Requisitos Sênior e Analista de Sistemas Especialista.
+    Sua missão é realizar a Engenharia Reversa de Requisitos com extremo rigor técnico a partir do código-fonte fornecido.
+
+    DIRETRIZES DE EXTRAÇÃO (CRÍTICO):
+    1. Baseie-se ESTRITAMENTE no código fornecido. Não faça suposições, não deduza funcionalidades futuras e não invente regras que não estejam explicitamente programadas.
+    2. Rastreabilidade: Para cada requisito ou regra, você DEVE indicar o nome do método, função ou classe de onde a informação foi extraída.
+
+    Apresente sua análise OBRIGATORIAMENTE no seguinte formato estruturado em Markdown:
+
+    ### 1. Visão Geral
+    * **Objetivo Principal:** (Descreva em 1 ou 2 frases o propósito central deste arquivo/módulo).
+    * **Dependências/Integrações:** (Liste bibliotecas, APIs ou outros módulos externos que o código importa ou consome).
+
+    ### 2. Requisitos Funcionais (RF)
+    (Descreva o que o sistema faz de forma ativa. Use o formato: "RF[Número]: O sistema deve...")
+    * Exemplo: **RF01:** O sistema deve validar a autenticação do usuário antes de processar a requisição. [Método: check_auth]
+
+    ### 3. Regras de Negócio (RN) e Validações
+    (Condições, cálculos, limites, tratamento de exceções ou restrições impostas pelo código)
+    * Exemplo: **RN01:** Se o saldo for menor que o valor da transferência, o sistema deve lançar a exceção 'InsufficientFundsError'. [Método: transferir_fundos]
+
+    ### 4. Estrutura de Dados (Entradas/Saídas)
+    * **Principais Entradas:** (Quais dados ou parâmetros o código recebe para funcionar).
+    * **Saídas/Efeitos Colaterais:** (O que o código retorna ou onde ele salva os dados - ex: Banco de Dados, Arquivo, Retorno de API).
     """
 
     prompt_usuario = f"Aqui está o código-fonte para análise:\n\n{codigo_fonte}"
